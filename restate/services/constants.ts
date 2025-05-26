@@ -1,1 +1,1 @@
-export const COUNTER_OBJECT = { name: "Counter" };
+export const AGENT_OBJECT = { name: "agent" };

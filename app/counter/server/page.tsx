@@ -6,28 +6,26 @@ import { Badge } from "@/components/Badge";
 import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function Server() {
-  const counterValue = await counterClient.current();
+  //const counterValue = await counterClient.current();
 
   async function formAction(formData: FormData) {
     "use server";
-    const amount = Number(formData.get("amount"));
-    if (!isNaN(amount)) {
-      await counterClient.add(amount);
-      revalidatePath("/counter/server");
-    }
+    const text: string = String(formData.get("text"));
+    await counterClient.add(text);
+    revalidatePath("/counter/server");
   }
 
   return (
     <Form action={formAction} className="flex flex-col gap-4">
       <div className="font-medium text-sm">
-        Current value: <Badge>{counterValue}</Badge>
+       Talk to the agent!
       </div>
       <Input
-        type="number"
-        name="amount"
+        type="text"
+        name="text"
         required
-        placeholder="0"
-        label="Amount"
+        placeholder=""
+        label="Talk to the agent"
       />
       <SubmitButton>Add</SubmitButton>
     </Form>
