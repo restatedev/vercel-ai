@@ -16,6 +16,7 @@
     "@restatedev/restate-sdk-zod": "^1.6.0",
     "@tailwindcss/forms": "^0.5.9",
     "ai": "^4.3.16",
+    "mathjs": "^14.5.0",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

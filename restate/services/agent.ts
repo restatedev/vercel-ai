@@ -2,11 +2,11 @@ import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
 
 import { openai } from "@ai-sdk/openai";
-import { generateObject, wrapLanguageModel } from "ai";
+import { generateObject, generateText, tool, wrapLanguageModel } from "ai";
 
 
 import { z } from "zod";
-import { middleware } from "../ai_infra";
+import { middleware, superJson,  } from "../ai_infra";
 
 export default restate.object({
   name: "agent",
@@ -18,37 +18,61 @@ export default restate.object({
         description: "Add a customer query and get a response",
       },
       async (ctx: restate.ObjectContext, query: string) => {
-        return handleCustomerQuery(ctx, query);
+        await example2(ctx);
+        throw new Error("Not implemented yet");
+        return "";
       }
     ),
   },
 });
 
+ 
+import * as mathjs from 'mathjs';
 
-async function handleCustomerQuery(ctx: restate.Context, query: string) {
+async function example2(ctx: restate.Context) {
+ 
   const model = wrapLanguageModel({
-    model: openai("gpt-4o"),
+    model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     middleware: middleware(ctx, { maxRetryAttempts: 1 }),
   });
 
-   // First step: Classify the query type
-   const { object: classification } = await generateObject({
+  const { text: answer } = await generateText({
     model,
-    maxRetries: 0,
-    schema: z.object({
-      reasoning: z.string(),
-      type: z.enum(['general', 'refund', 'technical']),
-      complexity: z.enum(['simple', 'complex']),
-    }),
-    prompt: `Classify this customer query:
-    ${query}
+    tools: {
+      calculate: tool({
+        description:
+          "A tool for evaluating mathematical expressions. " +
+          "Example expressions: " +
+          "'1.2 * (2 + 4.5)', '12.7 cm to inch', 'sin(45 deg) ^ 2'.",
+        parameters: z.object({ expression: z.string() }),
+        execute: async ({ expression }) => {
+          //
+          // use the restate API over here to store function calls into
+          // the durable log
+          //
+          return await ctx.run(
+            `evaluating ${expression}`,
+            async () => mathjs.evaluate(expression),
+            { serde: superJson }
+          );
 
-    Determine:
-    1. Query type (general, refund, or technical)
-    2. Complexity (simple or complex)
-    3. Brief reasoning for classification`,
+        },
+      }),
+    },
+    maxSteps: 10,
+    maxRetries: 0,
+    system:
+      "You are solving math problems. " +
+      "Reason step by step. " +
+      "Use the calculator when necessary. " +
+      "When you give the final answer, " +
+      "provide an explanation for how you arrived at it.",
+    prompt:
+      "A taxi driver earns $9461 per 1-hour of work. " +
+      "If he works 12 hours a day and in 1 hour " +
+      "he uses 12 liters of petrol with a price of $134 for 1 liter. " +
+      "How much money does he earn in one day?",
   });
 
-  return classification.reasoning;
+  return `Answer: ${answer}`;
 }
- 
