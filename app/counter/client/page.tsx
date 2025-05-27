@@ -1,5 +1,5 @@
 "use client";
-import { counterClient } from "@/restate/client";
+import restateClient from "@/restate/client";
 import useSWR from "swr";
 import Form from "next/form";
 import { Input } from "@/components/Input";
