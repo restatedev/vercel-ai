@@ -63,12 +63,10 @@ async function useToolsExample(ctx: restate.Context, prompt: string) {
     maxSteps: 10,
     maxRetries: 0,
     onStepFinish: async (step) => {
-
       publishMessage(ctx, "channel", {
         role: "system",
         content: step.text,
       });
-      
     },
     system:
       "You are solving math problems. " +
@@ -76,7 +74,7 @@ async function useToolsExample(ctx: restate.Context, prompt: string) {
       "Use the calculator when necessary. " +
       "When you give the final answer, " +
       "provide an explanation for how you arrived at it.",
-    prompt
+    prompt,
   });
 
   return `Answer: ${answer}`;
