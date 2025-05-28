@@ -1,9 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { superJson } from "../ai_infra";
-
 import { z } from "zod";
-
 
 interface Subscription {
   offset: number;
@@ -15,7 +12,7 @@ interface Notification {
   newMessages: unknown[];
 }
 
-interface ChatState {
+interface PubSubState {
   messages: unknown[];
   subscription: Subscription[];
 }
@@ -39,7 +36,14 @@ export const pubsub = restate.object({
           })
         ),
       },
-      async (ctx: restate.ObjectSharedContext<ChatState>, { offset }) => {
+      async (ctx: restate.ObjectSharedContext<PubSubState>, { offset }) => {
+        const messages = (await ctx.get("messages")) ?? [];
+        if (offset < messages.length) {
+          return {
+            messages,
+            nextOffset: messages.length,
+          };
+        }
         const { id, promise } = ctx.awakeable<Notification>();
         ctx.objectSendClient(pubsub, ctx.key).subscribe({ offset, id });
         const { newMessages, newOffset } = await promise;
@@ -51,12 +55,12 @@ export const pubsub = restate.object({
     ),
 
     publish: async (
-      ctx: restate.ObjectContext<ChatState>,
+      ctx: restate.ObjectContext<PubSubState>,
       message: unknown
     ) => {
-      const messages = (await ctx.get("messages", superJson)) ?? [];
+      const messages = (await ctx.get("messages")) ?? [];
       messages.push(message);
-      ctx.set("messages", messages, superJson);
+      ctx.set("messages", messages);
       const subscriptions = (await ctx.get("subscription")) ?? [];
       for (const { id, offset } of subscriptions) {
         const notification = {
@@ -69,16 +73,24 @@ export const pubsub = restate.object({
     },
 
     subscribe: async (
-      ctx: restate.ObjectContext<ChatState>,
+      ctx: restate.ObjectContext<PubSubState>,
       subscription: Subscription
     ) => {
+      const messages = (await ctx.get("messages")) ?? [];
+      if (subscription.offset < messages.length) {
+        const notification = {
+          newOffset: messages.length,
+          newMessages: messages.slice(subscription.offset),
+        };
+        ctx.resolveAwakeable(subscription.id, notification);
+        return;
+      }
       const sub = (await ctx.get("subscription")) ?? [];
       sub.push(subscription);
       ctx.set("subscription", sub);
     },
   },
 });
-
 
 export const publishMessage = <T>(
   ctx: restate.Context,
