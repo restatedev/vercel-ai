@@ -8,7 +8,6 @@ import { openai } from "@ai-sdk/openai";
 import { CoreMessage, generateText, tool, wrapLanguageModel } from "ai";
 
 interface ChatState {
-  // The messages used throughout the chat session
   messages: CoreMessage[];
 }
 

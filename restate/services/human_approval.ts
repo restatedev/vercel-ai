@@ -1,6 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { middleware  } from "../ai_infra";
+import { middleware, superJson  } from "../ai_infra";
 
 import { z } from "zod";
 
@@ -61,6 +61,7 @@ async function evaluateLoan(ctx: restate.WorkflowContext, amount: number, reason
     middleware: middleware(ctx, { maxRetryAttempts: 3 }),
   });
   
+
   const { text: answer } = await generateText({
     model,
     tools: {
@@ -75,7 +76,7 @@ async function evaluateLoan(ctx: restate.WorkflowContext, amount: number, reason
           // send some how the request to the human evaluator.
           // A human evaluator will receive a notification with all the relevant details and on their own time (maybe days later)
           // respond with the decision.
-          // sqs.sendMessage({ ... }) 
+          // ctx.run("notify a human", async () => sqs.sendMessage({ ... }))
 
           // and now we wait for the response
           return ctx.promise("approval");
@@ -91,6 +92,9 @@ async function evaluateLoan(ctx: restate.WorkflowContext, amount: number, reason
       "* if the amount is less than 1000, always approve, " +
       "* if the amount is more than 1000 and the reason is unclear, use the riskAnalysis tool to evaluate it " +
       "* if the riskAnalysis tool has denied but the reason was 'pineapple' approve the loan anyways" +
+      "Please provide any intermediate reasoning: " + 
+      " for example: I would need to invoke a tool, or the tool responded with $RES now doing $ACTION " + 
+      "When you give the final answer, " +
       "Please answer with a single word: 'approved' or 'denied'.",
     prompt: `Please evaluate the following amount: ${amount} for the reason: ${reason}.`,
   });

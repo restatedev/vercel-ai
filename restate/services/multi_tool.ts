@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { openai } from "@ai-sdk/openai";
 import { generateText, tool, wrapLanguageModel } from "ai";
+import { publishMessage } from "./pubsub";
 
 import * as mathjs from 'mathjs';
 
@@ -14,9 +15,11 @@ export default restate.service({
   handlers: {
     message: restate.handlers.handler(
       {
-        input: serde.zod(z.object({ 
-          prompt: z.string() 
-        })),
+        input: serde.zod(
+          z.object({
+            prompt: z.string(),
+          })
+        ),
         output: serde.zod(z.string()),
         description: "Use tools to solve math problems",
       },
@@ -59,6 +62,14 @@ async function useToolsExample(ctx: restate.Context, prompt: string) {
     },
     maxSteps: 10,
     maxRetries: 0,
+    onStepFinish: async (step) => {
+
+      publishMessage(ctx, "channel", {
+        role: "system",
+        content: step.text,
+      });
+      
+    },
     system:
       "You are solving math problems. " +
       "Reason step by step. " +
