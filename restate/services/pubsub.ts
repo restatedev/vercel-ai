@@ -99,3 +99,5 @@ export const publishMessage = <T>(
 ) => {
   ctx.objectSendClient(pubsub, topic).publish(message);
 };
+
+export type PubSub = typeof pubsub;
