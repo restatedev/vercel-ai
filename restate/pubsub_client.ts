@@ -1,14 +1,35 @@
 import * as clients from "@restatedev/restate-sdk-clients";
 import type { PubSub } from "./services/pubsub";
 
-export async function* pullMessages(opts: {
+export type PullOptions = {
   ingressUrl: string;
   topic: string;
   headers?: Record<string, string>;
   ac?: AbortController;
   offset?: number;
   pullInterval?: number;
-}) {
+}
+
+export function sseStream(opts: PullOptions): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      const content = pullMessages(opts);
+      for await (const message of content) {
+        const chunk = `data: ${JSON.stringify(message)}\n\n`;
+        controller.enqueue(encoder.encode(chunk));
+        if (opts.ac?.signal.aborted) {
+          break;
+        }
+      }
+      controller.close();
+    },
+  });
+}
+
+export async function* pullMessages(
+  opts: PullOptions
+): AsyncGenerator<Uint8Array> {
   const ingress = clients.connect({
     url: opts.ingressUrl,
     headers: opts.headers,

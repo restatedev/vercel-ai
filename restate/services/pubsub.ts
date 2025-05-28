@@ -9,11 +9,11 @@ interface Subscription {
 
 interface Notification {
   newOffset: number;
-  newMessages: unknown[];
+  newMessages: any[];
 }
 
 interface PubSubState {
-  messages: unknown[];
+  messages: any[];
   subscription: Subscription[];
 }
 
@@ -59,7 +59,7 @@ export const pubsub = restate.object({
       message: unknown
     ) => {
       const messages = (await ctx.get("messages")) ?? [];
-      messages.push(message);
+      messages.push(message);   
       ctx.set("messages", messages);
       const subscriptions = (await ctx.get("subscription")) ?? [];
       for (const { id, offset } of subscriptions) {
