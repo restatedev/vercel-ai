@@ -33,13 +33,13 @@ The entry point is in the [restate/v1](app/restate/v1/[[...services]]/route.ts) 
 
 ### Register the AI SDK agents at Restate
 
-The simplest was is the UI, which is at [http://localhost:9070](http://localhost:9070).
-See screenshots below for walkthrough.
+The simplest way to register new services is the UI, which is at [http://localhost:9070](http://localhost:9070).
+See the screenshots below for a walkthrough.
 
-If you have the [CLI installed](),
+If you have the [CLI installed](https://restate.dev/get-restate/),
 you can also simply call `restate deployments register http://localhost:3000/restate/v1 --use-http1.1`
 
-**Bear in mind replacing *localhost* with *host.docker.internal* if you docker distribution requires that**.
+**Bear in mind that you need to replace *localhost* with *host.docker.internal*, if your docker distribution requires that**.
 
 ![Screenshot of Restate service registration UI](doc/img/registration.png)
 
@@ -143,7 +143,10 @@ approval: async (ctx: restate.WorkflowSharedContext, approval: string) => {
 ```
 
 The UI shows how the agentic workflow suspends when awaiting the durable promise.
+
 ![Screenshot of workflow awaiting approval promise](doc/img/human_approval_pending.png)
+
+The approval promise can be completed via the UI as well, select the *approval* handler. Make sure you address the right workflow (use the same key as you used for kicking off the workflow).
 
 ![Screenshot of completed workflow](doc/img/human_approval_complete.png)
 
@@ -151,8 +154,8 @@ The UI shows how the agentic workflow suspends when awaiting the durable promise
 
 ### Chat
 
-This is an example of using virtual object state to remember per-user chat history.
-Virtual objects give us guaranteed unique keys, single writer invocation per key, transactional state per key.
+This is an example of using virtual object state to remember the per-user chat history.
+Virtual objects give us in addition guaranteed unique keys, guaranteed single writer concurrency, and state transactionality.
 
 Code: [chat.ts](./restate/services/chat.ts)
 
@@ -166,6 +169,8 @@ curl localhost:8080/chat/malte/message --json '{ "message": "Who am I?" }' # => 
 curl localhost:8080/chat/timer/message --json '{ "message": "Who am I?" }' # => timer
 ```
 
+You can explore the state of the Virtual Objects in the UI.
+
 ![Screenshot of state UI](doc/img/chat_state.png)
 
 
@@ -175,7 +180,7 @@ This example shows how to let one agent call another agent.
 Code: [multi_agent.ts](./restate/services/multi_agent.ts)
 
 We use Restate's durable RPC mechanism, which gives us reliable event-based RPC,
-automatic idempotency, and suspends the calling agent while the other agent is working. 
+automatic idempotency, and suspends the calling agent while the callee agent is working. 
 
 ```typescript
 riskAssessmentAgent: tool({
@@ -198,10 +203,10 @@ riskAssessmentAgent: tool({
 
 When asking for a loan of 50000, the risk assessment agent will be called.
 
-The UI shows how the calling agent is suspended, while the other agent is doing something:
+The UI shows how the calling agent is suspended, while the risk assessment agent is busy.
 ![Screenshot of the main loan agent awaiting the risk assessment agent](doc/img/multi_agent_pending.png)
 
-Here, everything is complete:
+After the risk assessment agent completes, the callee resumes the workflow.
 ![Screenshot of the main loan agent with the completed risk assessment agent](doc/img/multi_agent_complete.png)
 
 
