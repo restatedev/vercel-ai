@@ -40,7 +40,7 @@ export const pubsub = restate.object({
         const messages = (await ctx.get("messages")) ?? [];
         if (offset < messages.length) {
           return {
-            messages,
+            messages: messages.slice(offset),
             nextOffset: messages.length,
           };
         }

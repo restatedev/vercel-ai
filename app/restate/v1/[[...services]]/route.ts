@@ -4,6 +4,7 @@ import multi_tool from "@/restate/services/multi_tool";
 import chat from "@/restate/services/chat";
 import human from "@/restate/services/human_approval";
 import { pubsub } from "@/restate/services/pubsub";
+import { multiAgentLoanWorkflow, riskAssementAgent } from "@/restate/services/multi_agent";
 
 const services = restate
   .endpoint()
@@ -11,6 +12,8 @@ const services = restate
   .bind(human)
   .bind(chat)
   .bind(pubsub)
+  .bind(multiAgentLoanWorkflow)
+  .bind(riskAssementAgent)
   .handler();
 
 export function GET(request: Request) {

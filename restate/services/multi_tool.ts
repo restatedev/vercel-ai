@@ -10,6 +10,9 @@ import { publishMessage } from "./pubsub";
 
 import * as mathjs from 'mathjs';
 
+// the Restate service that is the durable entry point for the
+// agent workflow 
+
 export default restate.service({
   name: "tools",
   handlers: {
