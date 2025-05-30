@@ -12,56 +12,38 @@ export default function Chat() {
 
   useEffect(() => {
     let cancelled = false;
-    let abortController: AbortController;
     let offset = 0;
+    let evtSource: EventSource;
     const obtainAPIResponse = async () => {
-      abortController = new AbortController();
       try {
-        const apiResponse = await fetch(`/pubsub/${topic}?offset=${offset}`, {
-          signal: abortController.signal,
-        });
+        evtSource = new EventSource(`/pubsub/${topic}?offset=${offset}`);
 
-        if (!apiResponse.body) return;
-
-        const reader = apiResponse.body
-          .pipeThrough(new TextDecoderStream())
-          .getReader();
-
-        while (true) {
-          const { value, done } = await reader.read();
-
-          if (done) {
-            obtainAPIResponse();
-            break;
-          }
-
-          if (value && !cancelled) {
+        evtSource.onmessage = (event) => {
+          if (event.data && !cancelled) {
+            console.log(event.data);
+            const parsedData = JSON.parse(event.data);
             setMessages((messages) => {
               const newValue = [
                 ...messages,
-                ...value
-                  .split("data: ")
-                  .filter(Boolean)
-                  .map((str) => JSON.parse(str))
-                  .map(({ content, role }) => ({
-                    content: content
-                      .replace(/\\n/g, "\n")
-                      .replace(/\n\n/g, "\n"),
-                    role,
-                  })),
+                {
+                  content: parsedData.content
+                    .replace(/\\n/g, "\n")
+                    .replace(/\n\n/g, "\n"),
+                  role: parsedData.role,
+                },
               ];
 
               offset = newValue.length;
               return newValue;
             });
           }
-        }
+        };
       } catch (error) {}
     };
     obtainAPIResponse();
 
     return () => {
-      abortController.abort();
+      evtSource.close();
       cancelled = true;
     };
   }, [topic]);
