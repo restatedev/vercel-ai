@@ -66,7 +66,7 @@ export async function publishMessage<T>(
     url: opts.ingressUrl,
     headers: opts.headers,
   });
-  await ingress
-    .objectClient<PubSub>({ name: "pubsub" }, opts.topic)
+  ingress
+    .objectSendClient<PubSub>({ name: "pubsub" }, opts.topic)
     .publish(message);
 }

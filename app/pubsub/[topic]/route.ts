@@ -27,12 +27,12 @@ export async function POST(
   const { topic } = await params;
   const { message } = await request.json();
 
-  const response = await publishMessage(
+  await publishMessage(
     { role: "user", content: message },
     {
       ingressUrl: process.env.INGRESS_URL || "http://localhost:8080",
       topic,
     }
   );
-  return Response.json(response);
+  return Response.json({ ok: true });
 }
