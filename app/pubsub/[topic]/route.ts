@@ -1,4 +1,4 @@
-import { sse } from "@/restate/pubsub_client";
+import { sse, publishMessage } from "@/restate/pubsub_client";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest, { params }: any) {
@@ -18,4 +18,21 @@ export async function GET(request: NextRequest, { params }: any) {
       "Content-Type": "text/event-stream",
     },
   });
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ topic: string }> }
+) {
+  const { topic } = await params;
+  const { message } = await request.json();
+
+  const response = await publishMessage(
+    { role: "user", content: message },
+    {
+      ingressUrl: process.env.INGRESS_URL || "http://localhost:8080",
+      topic,
+    }
+  );
+  return Response.json(response);
 }

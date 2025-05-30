@@ -8,7 +8,6 @@ export type PullOptions = {
   signal?: AbortSignal;
   offset?: number;
   pullInterval?: number;
-  pullTimeout?: number;
 };
 
 export function sse(opts: PullOptions): ReadableStream<Uint8Array> {
@@ -57,4 +56,17 @@ async function* pullMessages(opts: PullOptions) {
       await new Promise((resolve) => setTimeout(resolve, opts.pullInterval));
     }
   }
+}
+
+export async function publishMessage<T>(
+  message: T,
+  opts: Pick<PullOptions, "topic" | "ingressUrl" | "headers">
+) {
+  const ingress = clients.connect({
+    url: opts.ingressUrl,
+    headers: opts.headers,
+  });
+  await ingress
+    .objectClient<PubSub>({ name: "pubsub" }, opts.topic)
+    .publish(message);
 }

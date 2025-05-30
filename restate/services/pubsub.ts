@@ -1,6 +1,7 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
 import { z } from "zod";
+import { Tool } from "./multi_tool";
 
 const PULL_TIMEOUT = parseInt(process.env.PULL_TIMEOUT ?? "30000"); // 30 seconds
 
@@ -65,6 +66,19 @@ export const pubsub = restate.object({
       const messages = (await ctx.get("messages")) ?? [];
       messages.push(message);
       ctx.set("messages", messages);
+      if (
+        typeof message === "object" &&
+        message !== null &&
+        "role" in message &&
+        "content" in message &&
+        message.role === "user"
+      ) {
+        // TODO: Temp solution, Should not happen here
+        ctx
+          .serviceSendClient<Tool>({ name: "tools" })
+          .message({ prompt: message.content as string, topic: ctx.key });
+      }
+
       const subscriptions = (await ctx.get("subscription")) ?? [];
       for (const { id, offset } of subscriptions) {
         const notification = {
