@@ -1,6 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { middleware, superJson,  } from "../ai_infra";
+import { remoteCalls, superJson,  } from "../ai_infra";
 
 import { z } from "zod";
 
@@ -38,7 +38,7 @@ async function useToolsExample(ctx: restate.Context, prompt: string) {
  
   const model = wrapLanguageModel({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
-    middleware: middleware(ctx, { maxRetryAttempts: 3 }),
+    middleware: remoteCalls(ctx, { maxRetryAttempts: 3, maxConcurrency: 10 }),
   });
 
   const { text: answer } = await generateText({

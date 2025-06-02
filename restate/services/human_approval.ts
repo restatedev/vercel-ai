@@ -1,6 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { middleware, superJson  } from "../ai_infra";
+import { durableCalls } from "../ai_infra";
 
 import { z } from "zod";
 
@@ -58,7 +58,7 @@ async function evaluateLoan(ctx: restate.WorkflowContext, amount: number, reason
  
   const model = wrapLanguageModel({
     model: openai("gpt-4o", { structuredOutputs: true }),
-    middleware: middleware(ctx, { maxRetryAttempts: 3 }),
+    middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
   });
   
 
