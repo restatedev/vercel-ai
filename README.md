@@ -73,7 +73,7 @@ The example is almost vanilla Vercel AI SDK code, with three small additions:
    ```typescript
    const model = wrapLanguageModel({
      model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
-     middleware: middleware(ctx, { maxRetryAttempts: 3 }),
+     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
    });
    ```
 
@@ -209,6 +209,23 @@ The UI shows how the calling agent is suspended, while the risk assessment agent
 After the risk assessment agent completes, the callee resumes the workflow.
 ![Screenshot of the main loan agent with the completed risk assessment agent](doc/img/multi_agent_complete.png)
 
+## Remote LLM Calls
+
+This example demonstrates how to extract the LLM calls into a separate restate service.
+Code: [remote_llm.ts](./restate/services/remote_llm.ts)
+
+We use restate's durable RPC, virtual objects for concurrency control, and the flexibility of deployment to separate the long running 
+I/O bound services (wait for the LLM to respond).
+For example, clustering these calls in a Fluid compute runtime, or even a standalone VM/pod/ECS container. 
+
+Use the `remoteCalls` middleware instead:
+
+```typescript
+const model = wrapLanguageModel({
+     model: openai("gpt-4o-mini", { structuredOutputs: true }),
+     middleware: remoteCalls(ctx, { maxRetryAttempts: 3, maxConcurrency: 10 }),
+});
+```
 
 ## Experiment - Persistent Result Event Stream
 
