@@ -1,14 +1,15 @@
 "use client";
 import Form from "next/form";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function Chat() {
   const { topic } = useParams<{ topic: string }>();
-
   const [messages, setMessages] = useState<{ content: string; role: string }[]>(
     []
   );
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     let cancelled = false;
@@ -20,7 +21,6 @@ export default function Chat() {
 
         evtSource.onmessage = (event) => {
           if (event.data && !cancelled) {
-            console.log(event.data);
             const parsedData = JSON.parse(event.data);
             setMessages((messages) => {
               const newValue = [
@@ -58,7 +58,7 @@ export default function Chat() {
 
   const formAction = async (formData: FormData) => {
     if (String(formData.get("message"))) {
-      await fetch(`/pubsub/${topic}`, {
+      fetch(`/pubsub/${topic}?stream=${searchParams.get("stream")}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,27 +70,47 @@ export default function Chat() {
       });
     }
   };
+  const combined = messages.reduce(
+    (results, message) => {
+      const lastMessage = results.at(-1);
+      if (lastMessage?.role === "system" && message.role === "system") {
+        return [
+          ...results.splice(0, results.length - 1),
+          {
+            role: "system",
+            content: lastMessage.content + message.content,
+          },
+        ];
+      }
+      return [...results, message];
+    },
+    [] as {
+      content: string;
+      role: string;
+    }[]
+  );
 
   return (
     <div className="min-h-[100vh] max-w-xl w-full mx-auto flex flex-col ">
       <div className="flex-auto py-24 flex flex-col gap-2 items-start px-2">
-        {messages.map((message, index) => (
+        {combined.map((message, index) => (
           <div
             key={index}
             className={
               message.role === "user"
                 ? "ml-auto rounded-lg bg-white border border-gray-200 shadow-sm py-1 px-2 whitespace-pre-line max-w-[80%]"
-                : " py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
+                : "inline  py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
             }
             ref={(e) => {
-              if (index === messages.length - 1 && e) {
-                e.scrollIntoView();
+              if (index === combined.length - 1 && e) {
+                document.getElementById("bottom")?.scrollIntoView();
               }
             }}
           >
             {message.content}{" "}
           </div>
         ))}
+        <div id="bottom" className="scroll-mb-24" />
       </div>
       <div className="fixed bottom-0 left-0 right-0 h-36  bg-gradient-to-b from-transparent to-[var(--background)]  " />
       <div className="sticky bottom-4 w-full rounded-lg bg-white  outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 focus-within:shadow-lg">
