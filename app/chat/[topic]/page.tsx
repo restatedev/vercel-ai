@@ -26,9 +26,7 @@ export default function Chat() {
               const newValue = [
                 ...messages,
                 {
-                  content: parsedData.content
-                    .replace(/\\n/g, "\n")
-                    .replace(/\n\n/g, "\n"),
+                  content: parsedData.content,
                   role: parsedData.role,
                 },
               ];
