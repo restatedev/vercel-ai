@@ -19,7 +19,6 @@ export default restate.service({
           })
         ),
         output: serde.zod(z.string()),
-        description: "Use tools to solve math problems",
       },
       async (ctx: restate.Context, { text, targetLanguage }) => {
         const { finalTranslation } = await translateWithFeedback(
