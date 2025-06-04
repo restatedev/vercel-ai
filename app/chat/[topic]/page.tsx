@@ -1,6 +1,6 @@
 "use client";
 import Form from "next/form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
 export default function Chat() {
@@ -70,39 +70,45 @@ export default function Chat() {
       });
     }
   };
-  const combined = messages.reduce(
-    (results, message) => {
-      const lastMessage = results.at(-1);
-      if (lastMessage?.role === "system" && message.role === "system") {
-        return [
-          ...results.splice(0, results.length - 1),
-          {
-            role: "system",
-            content: lastMessage.content + message.content,
-          },
-        ];
-      }
-      return [...results, message];
-    },
-    [] as {
-      content: string;
-      role: string;
-    }[]
+  const aggregatedMessages = useMemo(
+    () =>
+      messages.reduce(
+        (results, message) => {
+          const lastMessage = results.at(-1);
+          if (lastMessage?.role === "system" && message.role === "system") {
+            return [
+              ...results.splice(0, results.length - 1),
+              {
+                role: "system",
+                content: lastMessage.content + message.content,
+              },
+            ];
+          }
+          return [...results, message];
+        },
+        [] as {
+          content: string;
+          role: string;
+        }[]
+      ),
+    [messages]
   );
+
+  const isLastMessageFromUser = aggregatedMessages.at(-1)?.role === "user";
 
   return (
     <div className="min-h-[100vh] max-w-xl w-full mx-auto flex flex-col ">
       <div className="flex-auto py-24 flex flex-col gap-2 items-start px-2">
-        {combined.map((message, index) => (
+        {aggregatedMessages.map((message, index) => (
           <div
             key={index}
             className={
               message.role === "user"
                 ? "ml-auto rounded-lg bg-white border border-gray-200 shadow-sm py-1 px-2 whitespace-pre-line max-w-[80%]"
-                : "inline  py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
+                : "inline py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
             }
             ref={(e) => {
-              if (index === combined.length - 1 && e) {
+              if (index === aggregatedMessages.length - 1 && e) {
                 document.getElementById("bottom")?.scrollIntoView();
               }
             }}
@@ -110,6 +116,11 @@ export default function Chat() {
             {message.content}{" "}
           </div>
         ))}
+        {isLastMessageFromUser && (
+          <div className="flex items-center gap-1 text-gray-500">
+            <Spinner /> Thinking…
+          </div>
+        )}
         <div id="bottom" className="scroll-mb-24" />
       </div>
       <div className="fixed bottom-0 left-0 right-0 h-36  bg-gradient-to-b from-transparent to-[var(--background)]  " />
@@ -135,5 +146,30 @@ export default function Chat() {
         </Form>
       </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin h-5 w-5"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className=""
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 2.21.895 4.21 2.344 5.657l2.217-2.123z"
+      ></path>
+    </svg>
   );
 }
