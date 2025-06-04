@@ -38,12 +38,6 @@ export default function Chat() {
         };
         evtSource.onerror = (error) => {
           console.error("EventSource failed:", error);
-
-          if (evtSource.readyState === EventSource.CLOSED) {
-            setTimeout(() => {
-              obtainAPIResponse();
-            }, 1000);
-          }
         };
       } catch (error) {}
     };
