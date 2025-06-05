@@ -8,6 +8,7 @@ export default function Agent() {
   const [messages, setMessages] = useState<{ content: string; role: string }[]>(
     []
   );
+  const [isConnecting, setIsConnecting] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -16,7 +17,6 @@ export default function Agent() {
     const obtainAPIResponse = async () => {
       try {
         evtSource = new EventSource(`/pubsub/${topic}?offset=${offset}`);
-
         evtSource.onmessage = (event) => {
           if (event.data && !cancelled) {
             const parsedData = JSON.parse(event.data);
@@ -34,12 +34,19 @@ export default function Agent() {
             });
           }
         };
+        evtSource.onopen = () => {
+          setTimeout(() => {
+            setIsConnecting(false);
+          }, 250);
+        };
         evtSource.onerror = (error) => {
           console.error("EventSource failed:", error);
 
           if (evtSource.readyState === EventSource.CLOSED) {
             setTimeout(() => {
-              obtainAPIResponse();
+              if (!cancelled) {
+                obtainAPIResponse();
+              }
             }, 1000);
           }
         };
@@ -54,7 +61,7 @@ export default function Agent() {
 
   const formAction = async (formData: FormData) => {
     if (String(formData.get("message"))) {
-      fetch(`/agent/${topic}/api`, {
+      await fetch(`/agent/${topic}/api`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,14 +108,21 @@ export default function Agent() {
         <Form className="relative min-h-28" action={formAction}>
           <textarea
             name="message"
+            key={String(messages.length === 0 && !isConnecting)}
             aria-label="Write your message"
             placeholder="Write your message"
-            className="absolute inset-0 block w-full resize-none bg-transparent px-3 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:outline-0 sm:text-sm/6"
+            className="absolute inset-0 block w-full resize-none bg-transparent px-3 py-1.5 text-base transition-colors duration-2500 delay-250  text-gray-900 placeholder:text-gray-400 focus:outline-0 sm:text-sm/6"
             onKeyDown={(e) => {
               if (e.key === "Enter" && e.metaKey) {
                 e.currentTarget.form?.requestSubmit();
               }
             }}
+            data-isconnecting={isConnecting}
+            defaultValue={
+              messages.length === 0 && !isConnecting
+                ? `A taxi driver earns $9461 per 1-hour of work.\nIf he works 12 hours a day and in 1 hour\nhe uses 12 liters of petrol with a price  of $134 for 1 liter.\nHow much money does he earn in one day?`
+                : ""
+            }
           />
           <button className="absolute right-1.5 flex bottom-1.5 items-center rounded-lg bg-indigo-600 px-3 pr-1.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
             Send{" "}
