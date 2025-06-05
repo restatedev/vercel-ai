@@ -2,9 +2,11 @@ import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
 import { z } from "zod";
 
+const PULL_TIMEOUT = parseInt(process.env.PULL_TIMEOUT ?? "30000"); // 30 seconds
+
 interface Subscription {
   offset: number;
-  id: string; 
+  id: string;
 }
 
 interface Notification {
@@ -17,7 +19,7 @@ interface PubSubState {
   subscription: Subscription[];
 }
 
-const handler = restate.handlers.object
+const handler = restate.handlers.object;
 
 export const pubsub = restate.object({
   name: "pubsub",
@@ -46,7 +48,9 @@ export const pubsub = restate.object({
         }
         const { id, promise } = ctx.awakeable<Notification>();
         ctx.objectSendClient(pubsub, ctx.key).subscribe({ offset, id });
-        const { newMessages, newOffset } = await promise;
+        const { newMessages, newOffset } = await promise.orTimeout(
+          PULL_TIMEOUT
+        );
         return {
           messages: newMessages,
           nextOffset: newOffset,
@@ -59,7 +63,7 @@ export const pubsub = restate.object({
       message: unknown
     ) => {
       const messages = (await ctx.get("messages")) ?? [];
-      messages.push(message);   
+      messages.push(message);
       ctx.set("messages", messages);
       const subscriptions = (await ctx.get("subscription")) ?? [];
       for (const { id, offset } of subscriptions) {
