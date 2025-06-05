@@ -45,6 +45,11 @@ async function useToolsExample(ctx: restate.Context, prompt: string, topic: stri
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
   });
   
+  publishMessage(ctx, topic, {
+    role: "user",
+    content: prompt,
+  });
+  
   const { text: answer } = await generateText({
     model,
     tools: {
@@ -70,9 +75,23 @@ async function useToolsExample(ctx: restate.Context, prompt: string, topic: stri
     maxSteps: 10,
     maxRetries: 0,
     onStepFinish: async (step) => {
+      step.toolCalls.forEach((toolCall) => {
+        publishMessage(ctx, topic, {
+          role: "assistant",
+          content: `Tool call: ${toolCall.toolName}(${JSON.stringify(
+            toolCall.args
+          )})`,
+        });
+      });
+      step.toolResults.forEach((toolResult) => {
+        publishMessage(ctx, topic, {
+          role: "assistant",
+          content: `Tool result: ${JSON.stringify(toolResult)}`,
+        });
+      });
       if (step.text.length > 0)
         publishMessage(ctx, topic, {
-          role: "system",
+          role: "assistant",
           content: step.text,
         });
     },
@@ -87,3 +106,5 @@ async function useToolsExample(ctx: restate.Context, prompt: string, topic: stri
 
   return `Answer: ${answer}`;
 }
+
+
