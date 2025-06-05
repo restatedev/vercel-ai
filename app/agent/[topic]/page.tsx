@@ -79,23 +79,40 @@ export default function Agent() {
   return (
     <div className="min-h-[100vh] max-w-xl w-full mx-auto flex flex-col ">
       <div className="flex-auto py-24 flex flex-col gap-2 items-start px-2">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={
-              message.role === "user"
-                ? "ml-auto rounded-lg bg-white border border-gray-200 shadow-sm py-1 px-2 whitespace-pre-line max-w-[80%]"
-                : "inline py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
-            }
-            ref={(e) => {
-              if (index === messages.length - 1 && e) {
-                document.getElementById("bottom")?.scrollIntoView();
-              }
-            }}
-          >
-            {message.content}{" "}
-          </div>
-        ))}
+        {messages.map((message, index) => {
+          if (message.role === "user") {
+            return (
+              <div
+                key={index}
+                className="ml-auto rounded-xl bg-white border border-gray-200 shadow-xs py-1 px-2 whitespace-pre-line max-w-[80%]"
+                ref={(e) => {
+                  if (index === messages.length - 1 && e) {
+                    document.getElementById("bottom")?.scrollIntoView();
+                  }
+                }}
+              >
+                {message.content}{" "}
+              </div>
+            );
+          } else {
+            return (
+              <pre
+                key={index}
+                className="py-2 px-3 whitespace-pre-line max-w-[80%] break-words text-sm bg-gray-200/50 rounded-xl border-gray-200 shadow-[inset_0_1px_0px_0px_rgba(0,0,0,0.03)]"
+              >
+                <code
+                  ref={(e) => {
+                    if (index === messages.length - 1 && e) {
+                      document.getElementById("bottom")?.scrollIntoView();
+                    }
+                  }}
+                >
+                  {message.content}{" "}
+                </code>
+              </pre>
+            );
+          }
+        })}
         {isLastMessageFromUser && (
           <div className="flex items-center gap-1 text-gray-500">
             <Spinner /> Thinking…
