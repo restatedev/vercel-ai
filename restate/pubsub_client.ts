@@ -8,7 +8,6 @@ export type PullOptions = {
   signal?: AbortSignal;
   offset?: number;
   pullInterval?: number;
-  pullTimeout?: number;
 };
 
 export function sse(opts: PullOptions): ReadableStream<Uint8Array> {

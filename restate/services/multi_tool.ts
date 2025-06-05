@@ -1,6 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { durableCalls, superJson,  } from "../ai_infra";
+import { durableCalls, superJson } from "../ai_infra";
 
 import { z } from "zod";
 
@@ -8,12 +8,12 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, tool, wrapLanguageModel } from "ai";
 import { publishMessage } from "./pubsub";
 
-import * as mathjs from 'mathjs';
+import * as mathjs from "mathjs";
 
 // the Restate service that is the durable entry point for the
-// agent workflow 
+// agent workflow
 
-export default restate.service({
+const tools = restate.service({
   name: "tools",
   handlers: {
     message: restate.handlers.handler(
@@ -37,19 +37,23 @@ export default restate.service({
   },
 });
 
-// https://ai-sdk.dev/docs/foundations/agents#using-maxsteps 
-async function useToolsExample(ctx: restate.Context, prompt: string, topic: string) {
- 
+// https://ai-sdk.dev/docs/foundations/agents#using-maxsteps
+async function useToolsExample(
+  ctx: restate.Context,
+  prompt: string,
+  topic: string
+) {
+  publishMessage(ctx, topic, {
+    role: "user",
+    content: prompt,
+    topic,
+  });
+
   const model = wrapLanguageModel({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
   });
-  
-  publishMessage(ctx, topic, {
-    role: "user",
-    content: prompt,
-  });
-  
+
   const { text: answer } = await generateText({
     model,
     tools: {
@@ -107,4 +111,5 @@ async function useToolsExample(ctx: restate.Context, prompt: string, topic: stri
   return `Answer: ${answer}`;
 }
 
-
+export default tools;
+export type Tool = typeof tools;

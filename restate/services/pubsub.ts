@@ -65,6 +65,7 @@ export const pubsub = restate.object({
       const messages = (await ctx.get("messages")) ?? [];
       messages.push(message);
       ctx.set("messages", messages);
+
       const subscriptions = (await ctx.get("subscription")) ?? [];
       for (const { id, offset } of subscriptions) {
         const notification = {

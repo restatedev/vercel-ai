@@ -1,6 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { durableCalls, superJson,  } from "../ai_infra";
+import { durableCalls, superJson } from "../ai_infra";
 
 import { z } from "zod";
 
@@ -11,7 +11,7 @@ interface ChatState {
   messages: CoreMessage[];
 }
 
-const handler = restate.handlers.object
+const handler = restate.handlers.object;
 
 export default restate.object({
   name: "chat",
@@ -32,7 +32,7 @@ export default restate.object({
       async (ctx: restate.ObjectContext<ChatState>, { message }) => {
         const model = wrapLanguageModel({
           model: openai("gpt-4o", { structuredOutputs: true }),
-          middleware: durableCalls(ctx, { maxRetryAttempts : 3 }),
+          middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
         });
 
         const messages = (await ctx.get("messages", superJson)) ?? [];
