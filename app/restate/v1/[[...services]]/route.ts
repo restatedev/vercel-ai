@@ -8,8 +8,13 @@ import { multiAgentLoanWorkflow, riskAssementAgent } from "@/restate/services/mu
 import { models } from "@/restate/ai_infra";
 import { pubsub } from "@/restate/services/pubsub";
 
-const services = restate
-  .endpoint()
+const RESTATE_REQUEST_SIGNING_KEY = process.env.RESTATE_REQUEST_SIGNING_KEY;
+
+const endoint = RESTATE_REQUEST_SIGNING_KEY
+  ? restate.endpoint().withIdentityV1(RESTATE_REQUEST_SIGNING_KEY)
+  : restate.endpoint();
+
+const services = endoint
   .bind(chat)
   .bind(human)
   .bind(multi_tool)
