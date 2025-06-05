@@ -43,6 +43,12 @@ async function useToolsExample(
   prompt: string,
   topic: string
 ) {
+  publishMessage(ctx, topic, {
+    role: "user",
+    content: prompt,
+    topic,
+  });
+
   const model = wrapLanguageModel({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),

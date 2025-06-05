@@ -5,6 +5,7 @@ import { z } from "zod";
 import * as mathjs from "mathjs";
 import { publishMessage } from "./pubsub_client";
 import { Tool } from "./services/multi_tool";
+import { PubSub } from "./services/pubsub";
 
 export async function callToolViaRestate(
   message: string,
@@ -32,6 +33,15 @@ export async function callToolDirectly(
     headers?: Record<string, string>;
   }
 ) {
+  const ingress = clients.connect({
+    url: opts.ingressUrl,
+    headers: opts.headers,
+  });
+
+  ingress
+    .objectSendClient<PubSub>({ name: "pubsub" }, opts.topic)
+    .publish({ content: message, role: "user" });
+
   const result = streamText({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     tools: {

@@ -31,14 +31,6 @@ export async function POST(
   const shouldStream = searchParams.get("stream") === "true";
   const ingressUrl = process.env.INGRESS_URL || "http://localhost:8080";
 
-  await publishMessage(
-    { role: "user", content: message },
-    {
-      ingressUrl,
-      topic,
-    }
-  );
-
   if (shouldStream) {
     // call the calc tool directly
     await callToolDirectly(message, { topic, ingressUrl });
