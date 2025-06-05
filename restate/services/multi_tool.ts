@@ -21,26 +21,30 @@ export default restate.service({
         input: serde.zod(
           z.object({
             prompt: z.string(),
+            topic: z
+              .string()
+              .default("channel")
+              .describe("The topic to publish intermediate steps to"),
           })
         ),
         output: serde.zod(z.string()),
         description: "Use tools to solve math problems",
       },
-      async (ctx: restate.Context, { prompt }) => {
-        return await useToolsExample(ctx, prompt);
+      async (ctx: restate.Context, { prompt, topic }) => {
+        return await useToolsExample(ctx, prompt, topic ?? "channel");
       }
     ),
   },
 });
 
 // https://ai-sdk.dev/docs/foundations/agents#using-maxsteps 
-async function useToolsExample(ctx: restate.Context, prompt: string) {
+async function useToolsExample(ctx: restate.Context, prompt: string, topic: string) {
  
   const model = wrapLanguageModel({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
   });
-
+  
   const { text: answer } = await generateText({
     model,
     tools: {
@@ -66,10 +70,11 @@ async function useToolsExample(ctx: restate.Context, prompt: string) {
     maxSteps: 10,
     maxRetries: 0,
     onStepFinish: async (step) => {
-      publishMessage(ctx, "channel", {
-        role: "system",
-        content: step.text,
-      });
+      if (step.text.length > 0)
+        publishMessage(ctx, topic, {
+          role: "system",
+          content: step.text,
+        });
     },
     system:
       "You are solving math problems. " +
