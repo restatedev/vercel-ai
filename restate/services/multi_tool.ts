@@ -31,14 +31,14 @@ const tools = restate.service({
         description: "Use tools to solve math problems",
       },
       async (ctx: restate.Context, { prompt, topic }) => {
-        return await useToolsExample(ctx, prompt, topic ?? "channel");
+        return await toolsExample(ctx, prompt, topic);
       }
     ),
   },
 });
 
 // https://ai-sdk.dev/docs/foundations/agents#using-maxsteps
-async function useToolsExample(
+async function toolsExample(
   ctx: restate.Context,
   prompt: string,
   topic: string
@@ -93,11 +93,12 @@ async function useToolsExample(
           content: `Tool result: ${JSON.stringify(toolResult)}`,
         });
       });
-      if (step.text.length > 0)
+      if (step.text.length > 0) {
         publishMessage(ctx, topic, {
           role: "assistant",
           content: step.text,
         });
+      }
     },
     system:
       "You are solving math problems. " +

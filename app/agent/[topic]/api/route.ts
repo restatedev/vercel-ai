@@ -14,7 +14,7 @@ export async function POST(
     url: ingressUrl,
   });
 
-  ingress
+  await ingress
     .serviceSendClient<Tool>({ name: "tools" })
     .message({ prompt: message, topic });
 
