@@ -3,7 +3,7 @@ import Form from "next/form";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-export default function Chat() {
+export default function Agent() {
   const { topic } = useParams<{ topic: string }>();
   const [messages, setMessages] = useState<{ content: string; role: string }[]>(
     []
@@ -54,7 +54,7 @@ export default function Chat() {
 
   const formAction = async (formData: FormData) => {
     if (String(formData.get("message"))) {
-      fetch(`/pubsub/${topic}`, {
+      fetch(`/agent/${topic}/api`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
