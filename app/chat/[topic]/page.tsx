@@ -1,15 +1,13 @@
 "use client";
 import Form from "next/form";
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 export default function Chat() {
   const { topic } = useParams<{ topic: string }>();
   const [messages, setMessages] = useState<{ content: string; role: string }[]>(
     []
   );
-
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +54,7 @@ export default function Chat() {
 
   const formAction = async (formData: FormData) => {
     if (String(formData.get("message"))) {
-      fetch(`/pubsub/${topic}?stream=${searchParams.get("stream")}`, {
+      fetch(`/pubsub/${topic}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,11 +71,14 @@ export default function Chat() {
       messages.reduce(
         (results, message) => {
           const lastMessage = results.at(-1);
-          if (lastMessage?.role === "system" && message.role === "system") {
+          if (
+            lastMessage?.role === "assistant" &&
+            message.role === "assistant"
+          ) {
             return [
               ...results.splice(0, results.length - 1),
               {
-                role: "system",
+                role: "assistant",
                 content: lastMessage.content + message.content,
               },
             ];

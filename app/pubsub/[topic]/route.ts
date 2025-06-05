@@ -1,6 +1,7 @@
-import { sse, publishMessage } from "@/restate/pubsub_client";
-import { callToolDirectly, callToolViaRestate } from "@/restate/tool_client";
+import { sse } from "@/restate/pubsub_client";
 import { NextRequest } from "next/server";
+import * as clients from "@restatedev/restate-sdk-clients";
+import { Tool } from "@/restate/services/multi_tool";
 
 export async function GET(request: NextRequest, { params }: any) {
   const topic = (await params).topic;
@@ -27,17 +28,15 @@ export async function POST(
 ) {
   const { topic } = await params;
   const { message } = await request.json();
-  const searchParams = request.nextUrl.searchParams;
-  const shouldStream = searchParams.get("stream") === "true";
   const ingressUrl = process.env.INGRESS_URL || "http://localhost:8080";
 
-  if (shouldStream) {
-    // call the calc tool directly
-    await callToolDirectly(message, { topic, ingressUrl });
-  } else {
-    await callToolViaRestate(message, { topic, ingressUrl });
-    // call the calc tool in durable execution
-  }
+  const ingress = clients.connect({
+    url: ingressUrl,
+  });
+
+  ingress
+    .serviceSendClient<Tool>({ name: "tools" })
+    .message({ prompt: message, topic });
 
   return Response.json({ ok: true });
 }
