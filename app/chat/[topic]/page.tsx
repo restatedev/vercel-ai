@@ -1,6 +1,6 @@
 "use client";
 import Form from "next/form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 export default function Chat() {
@@ -66,39 +66,13 @@ export default function Chat() {
       });
     }
   };
-  const aggregatedMessages = useMemo(
-    () =>
-      messages.reduce(
-        (results, message) => {
-          const lastMessage = results.at(-1);
-          if (
-            lastMessage?.role === "assistant" &&
-            message.role === "assistant"
-          ) {
-            return [
-              ...results.splice(0, results.length - 1),
-              {
-                role: "assistant",
-                content: lastMessage.content + message.content,
-              },
-            ];
-          }
-          return [...results, message];
-        },
-        [] as {
-          content: string;
-          role: string;
-        }[]
-      ),
-    [messages]
-  );
 
-  const isLastMessageFromUser = aggregatedMessages.at(-1)?.role === "user";
+  const isLastMessageFromUser = messages.at(-1)?.role === "user";
 
   return (
     <div className="min-h-[100vh] max-w-xl w-full mx-auto flex flex-col ">
       <div className="flex-auto py-24 flex flex-col gap-2 items-start px-2">
-        {aggregatedMessages.map((message, index) => (
+        {messages.map((message, index) => (
           <div
             key={index}
             className={
@@ -107,7 +81,7 @@ export default function Chat() {
                 : "inline py-1 px-2 whitespace-pre-line max-w-[80%] [&&&_math]:hidden2"
             }
             ref={(e) => {
-              if (index === aggregatedMessages.length - 1 && e) {
+              if (index === messages.length - 1 && e) {
                 document.getElementById("bottom")?.scrollIntoView();
               }
             }}

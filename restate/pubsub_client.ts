@@ -57,16 +57,3 @@ async function* pullMessages(opts: PullOptions) {
     }
   }
 }
-
-export async function publishMessage<T>(
-  message: T,
-  opts: Pick<PullOptions, "topic" | "ingressUrl" | "headers">
-) {
-  const ingress = clients.connect({
-    url: opts.ingressUrl,
-    headers: opts.headers,
-  });
-  ingress
-    .objectSendClient<PubSub>({ name: "pubsub" }, opts.topic)
-    .publish(message);
-}
