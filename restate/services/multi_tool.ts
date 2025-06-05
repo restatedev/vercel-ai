@@ -54,11 +54,6 @@ async function useToolsExample(
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
   });
 
-  publishMessage(ctx, topic, {
-    role: "user",
-    content: prompt,
-  });
-
   const { text: answer } = await generateText({
     model,
     tools: {
