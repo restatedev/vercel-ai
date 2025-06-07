@@ -1,6 +1,7 @@
 import * as restate from "@restatedev/restate-sdk/fetch";
 
 import multi_tool from "@/restate/services/multi_tool";
+import multi_tool_reasoning from "@/restate/services/multi_tool_reasoning";
 import chat from "@/restate/services/chat";
 import human from "@/restate/services/human_approval";
 import remote from "@/restate/services/remote_llm";
@@ -18,6 +19,7 @@ const services = endoint
   .bind(chat)
   .bind(human)
   .bind(multi_tool)
+  .bind(multi_tool_reasoning)
   .bind(pubsub)
   .bind(multiAgentLoanWorkflow)
   .bind(riskAssementAgent)

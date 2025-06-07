@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import * as clients from "@restatedev/restate-sdk-clients";
-import { Tool } from "@/restate/services/multi_tool";
+import { Tool } from "@/restate/services/multi_tool_reasoning";
 
 const INGRESS_URL = process.env.INGRESS_URL || "http://localhost:8080";
 const RESTATE_API_KEY = process.env.RESTATE_API_KEY;
@@ -21,7 +21,7 @@ export async function POST(
   });
 
   await ingress
-    .serviceSendClient<Tool>({ name: "tools" })
+    .serviceSendClient<Tool>({ name: "tools_reasoning" })
     .message({ prompt: message, topic });
 
   return Response.json({ ok: true });

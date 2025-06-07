@@ -76,14 +76,10 @@ async function evaluateLoan(ctx: restate.WorkflowContext, amount: number, reason
         parameters: LoanRequest,
         execute: async ({ amount, reason }) => {
           // call the risk assessment agent by making a durable call to the agent workflow
-
-          // for simplicity, use same workflow ID, they are scoped to a specific workflow type
-          const riskAgentWorkflowId = ctx.key; 
-
           // this call to the other agent automatically suspends this agent
           // until the other agent responded
           const response = await ctx
-            .workflowClient<RiskAssementAgent>({ name: "risk_assess" }, riskAgentWorkflowId)
+            .workflowClient<RiskAssementAgent>({ name: "risk_assess" }, ctx.rand.uuidv4() /* random workflow id */)
             .run({ amount, reason });
 
           return response;
@@ -160,7 +156,7 @@ export const riskAssementAgent = restate.workflow({
                 "It makes you look thoughtful and smart. It always returns 'done thinking' when the pause is over.",
               parameters: z.object({}),
               execute: async () => {
-                await ctx.sleep(60_000)
+                await ctx.sleep(20_000)
                 return "done thinking"
               },
             })

@@ -13,25 +13,21 @@ import * as mathjs from "mathjs";
 // the Restate service that is the durable entry point for the
 // agent workflow
 
-const tools = restate.service({
+export default restate.service({
   name: "tools",
   handlers: {
     message: restate.handlers.handler(
       {
         input: serde.zod(
           z.object({
-            prompt: z.string(),
-            topic: z
-              .string()
-              .default("channel")
-              .describe("The topic to publish intermediate steps to"),
+            prompt: z.string()
           })
         ),
         output: serde.zod(z.string()),
         description: "Use tools to solve math problems",
       },
-      async (ctx: restate.Context, { prompt, topic }) => {
-        return await toolsExample(ctx, prompt, topic);
+      async (ctx: restate.Context, { prompt }) => {
+        return await toolsExample(ctx, prompt);
       }
     ),
   },
@@ -40,15 +36,8 @@ const tools = restate.service({
 // https://ai-sdk.dev/docs/foundations/agents#using-maxsteps
 async function toolsExample(
   ctx: restate.Context,
-  prompt: string,
-  topic: string
+  prompt: string
 ) {
-  publishMessage(ctx, topic, {
-    role: "user",
-    content: prompt,
-    topic,
-  });
-
   const model = wrapLanguageModel({
     model: openai("gpt-4o-2024-08-06", { structuredOutputs: true }),
     middleware: durableCalls(ctx, { maxRetryAttempts: 3 }),
@@ -78,28 +67,6 @@ async function toolsExample(
     },
     maxSteps: 10,
     maxRetries: 0,
-    onStepFinish: async (step) => {
-      step.toolCalls.forEach((toolCall) => {
-        publishMessage(ctx, topic, {
-          role: "assistant",
-          content: `Tool call: ${toolCall.toolName}(${JSON.stringify(
-            toolCall.args
-          )})`,
-        });
-      });
-      step.toolResults.forEach((toolResult) => {
-        publishMessage(ctx, topic, {
-          role: "assistant",
-          content: `Tool result: ${JSON.stringify(toolResult)}`,
-        });
-      });
-      if (step.text.length > 0) {
-        publishMessage(ctx, topic, {
-          role: "assistant",
-          content: step.text,
-        });
-      }
-    },
     system:
       "You are solving math problems. " +
       "Reason step by step. " +
@@ -111,6 +78,3 @@ async function toolsExample(
 
   return `Answer: ${answer}`;
 }
-
-export default tools;
-export type Tool = typeof tools;
