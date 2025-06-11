@@ -13,7 +13,7 @@ For access to the latest nightly version, run Restate via Docker:
 docker run --name restate_dev -it --rm --net=host \
   -e 'RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT=5min' \
   -e 'RESTATE_WORKER__INVOKER__ABORT_TIMEOUT=15min' \
-  -e 'RESTATE_ADMIN__experimental_feature_force_journal_retention=1month' \
+  -e 'RESTATE_ADMIN__experimental_feature_force_journal_retention=30d' \
   ghcr.io/restatedev/restate:main
 ```
 *(Note, if '--net=host' is not available in your docker distribution, you need to expose ports 9070 and 8080, and be aware that services are not registered on 'localhost' but on 'host.docker.internal' instead.)*
