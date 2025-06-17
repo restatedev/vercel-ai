@@ -15,7 +15,6 @@ export function sse(opts: PullOptions): ReadableStream<Uint8Array> {
   return new ReadableStream({
     async start(controller) {
       try {
-        controller.enqueue(encoder.encode(`event: ping\n`));
         const content = pullMessages(opts);
         for await (const message of content) {
           const chunk = `data: ${JSON.stringify(message)}\n\n`;
