@@ -79,6 +79,12 @@ async function toolsExample(
     maxSteps: 10,
     maxRetries: 0,
     onStepFinish: async (step) => {
+      if (step.text.length > 0) {
+        publishMessage(ctx, topic, {
+          role: "assistant",
+          content: step.text,
+        });
+      }
       step.toolCalls.forEach((toolCall) => {
         publishMessage(ctx, topic, {
           role: "assistant",
@@ -93,12 +99,6 @@ async function toolsExample(
           content: `Tool result: ${JSON.stringify(toolResult)}`,
         });
       });
-      if (step.text.length > 0) {
-        publishMessage(ctx, topic, {
-          role: "assistant",
-          content: step.text,
-        });
-      }
     },
     system:
       "You are solving math problems. " +
