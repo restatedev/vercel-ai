@@ -6,7 +6,7 @@ import chat from "@/restate/services/chat";
 import human from "@/restate/services/human_approval";
 import remote from "@/restate/services/remote_llm";
 import { multiAgentLoanWorkflow, riskAssementAgent } from "@/restate/services/multi_agent";
-import { models } from "@/restate/ai_infra";
+import { infra } from "@/restate/services/remote_llm";
 import { pubsub } from "@/restate/services/pubsub";
 
 const RESTATE_REQUEST_SIGNING_KEY = process.env.RESTATE_REQUEST_SIGNING_KEY;
@@ -24,7 +24,7 @@ const services = endoint
   .bind(multiAgentLoanWorkflow)
   .bind(riskAssementAgent)
   .bind(remote)
-  .bind(models)
+  .bind(infra.models)
   .handler();
 
 export function GET(request: Request) {

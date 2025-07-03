@@ -1,7 +1,6 @@
 import * as restate from "@restatedev/restate-sdk";
 import { serde } from "@restatedev/restate-sdk-zod";
-import { durableCalls, superJson } from "../ai_infra";
-
+import { durableCalls, superJson } from "@restatedev/vercel-ai-middleware";
 import { z } from "zod";
 
 import { openai } from "@ai-sdk/openai";
